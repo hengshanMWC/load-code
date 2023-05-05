@@ -1,15 +1,15 @@
 {
-  "name": "item-template",
+  "name": "load-code",
   "version": "0.0.0",
   "packageManager": "pnpm@7.21.0",
   "license": "MIT",
-  "homepage": "https://github.com/hengshanMWC/item-template#readme",
+  "homepage": "https://github.com/hengshanMWC/load-code#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hengshanMWC/item-template.git"
+    "url": "git+https://github.com/hengshanMWC/load-code.git"
   },
   "bugs": {
-    "url": "https://github.com/hengshanMWC/item-template/issues"
+    "url": "https://github.com/hengshanMWC/load-code/issues"
   },
   "main": "dist/index.umd.js",
   "module": "dist/index.mjs",

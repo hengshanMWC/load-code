@@ -7,8 +7,8 @@
 # init
 
 ```
-git clone https://github.com/hengshanMWC/item-template.git
-cd item-template
+git clone https://github.com/hengshanMWC/load-code.git
+cd load-code
 pnpm i
 ```
 
