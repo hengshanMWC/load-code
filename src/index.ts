@@ -10,7 +10,7 @@ export function requireLoad(code: string) {
   fn(require, mod.exports, moduleContext.module)
   return mod.exports
 }
-export async function loadCode(file: string, loader?: TransformOptions['loader']) {
+export async function loadCode(file: string, loader?: any) {
   const str = await readFile(file, 'utf8')
   const res = await transform(str, {
     loader: loader || getLoaderMap(file),

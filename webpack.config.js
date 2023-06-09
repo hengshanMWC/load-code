@@ -21,6 +21,7 @@ module.exports = {
     ],
   },
   resolve: {
+    mainFields: ['module', 'main'],
     extensions: ['.ts', '.js'],
     alias: {
       '@': path.resolve(__dirname, './src'),
