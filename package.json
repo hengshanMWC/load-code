@@ -15,7 +15,6 @@
   "module": "dist/index.mjs",
   "types": "typings",
   "scripts": {
-    "dev": "esno ./src",
     "release": "esno ./scripts/release",
     "build": "webpack --config webpack.config.js",
     "test": "vitest",
