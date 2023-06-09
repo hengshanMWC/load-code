@@ -15,6 +15,7 @@
   "module": "dist/index.mjs",
   "types": "typings",
   "scripts": {
+    "dev": "esno ./src",
     "release": "esno ./scripts/release",
     "build": "webpack --config webpack.config.js",
     "test": "vitest",
@@ -25,6 +26,9 @@
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs",
     "prepare": "husky install"
+  },
+  "dependencies": {
+    "esbuild": "^0.17.19"
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.38.5",
