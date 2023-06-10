@@ -6,7 +6,10 @@ import testData from '../__fixtures__/file/test'
 
 async function handleTest(ext: string, loader?: TransformOptions['loader']) {
   const jsData = await loadCode(join(__dirname, `../__fixtures__/file/test.${ext}`), loader)
-  expect(jsData?.__esModule ? jsData.default : jsData).toEqual(testData)
+  expect(getExportDefault(jsData)).toEqual(testData)
+}
+export function getExportDefault(code: any) {
+  return code?.__esModule ? code.default : code
 }
 describe('test', () => {
   test('demo', async () => {
