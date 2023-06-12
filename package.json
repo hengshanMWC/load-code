@@ -16,15 +16,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "release": "esno ./scripts/release",
-    "build": "tsup src/index.ts --dts",
+    "build": "tsup",
     "test": "vitest",
     "test:cov": "vitest --coverage",
     "lint": "eslint --ext=js,ts,json,md,tsx .",
     "lint:fix": "eslint --fix --ext=js,ts,json,md,tsx .",
     "prepare": "husky install"
   },
-  "dependencies": {
-    "esbuild": "^0.17.19"
+  "peerDependencies": {
+    "esbuild": "*"
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.38.5",
@@ -35,6 +35,7 @@
     "@vitest/coverage-c8": "^0.31.0",
     "bumpp": "^9.1.0",
     "colors": "^1.4.0",
+    "esbuild": "^0.18.1",
     "eslint": "^8.41.0",
     "esno": "^0.16.3",
     "husky": "^7.0.4",
