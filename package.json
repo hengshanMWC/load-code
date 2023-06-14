@@ -1,6 +1,6 @@
 {
   "name": "load-code",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "packageManager": "pnpm@7.21.0",
   "license": "MIT",
   "homepage": "https://github.com/hengshanMWC/load-code#readme",
