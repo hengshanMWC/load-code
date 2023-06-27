@@ -1,19 +1,8 @@
-import { parse, relative } from 'node:path'
+import { basename, join, parse, relative } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import JoyCon from 'joycon'
 import { bundleRequire } from 'bundle-require'
-import strip from 'strip-json-comments'
-
-function jsoncParse(data: string) {
-  try {
-    return new Function(`return ${strip(data).trim()}`)()
-  }
-  catch {
-    // Silently ignore any error
-    // That's what tsc/jsonc-parser did after all
-    return {}
-  }
-}
+import { JS_EXT_RE, getRandomId, jsoncParse, similarDirectory } from './utils'
 
 const joycon = new JoyCon()
 
@@ -71,9 +60,15 @@ export async function loadConfig<T = any>(
       }
       return {}
     }
+    const similarDirectoryPath = await similarDirectory()
 
     const config = await bundleRequire({
       filepath: configPath,
+      getOutputFile(filepath, format) {
+        return join(similarDirectoryPath, basename(filepath)).replace(
+          JS_EXT_RE,
+          `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`)
+      },
     })
     return {
       path: configPath,
