@@ -1,65 +1,85 @@
+import { parse, relative } from 'node:path'
 import { readFile } from 'node:fs/promises'
-import { extname } from 'node:path'
-import type { TransformOptions } from 'esbuild'
-import { transform } from 'esbuild'
+import JoyCon from 'joycon'
+import { bundleRequire } from 'bundle-require'
+import strip from 'strip-json-comments'
 
-export function requireCjsLoad(code: string) {
-  const fn = new Function('exports', 'require', 'module', '__filename', '__dirname', code)
-  const mod = { exports: {} }
-  const moduleContext = { exports: mod.exports, module: mod }
-  return () => {
-    fn(mod.exports, require, moduleContext.module, __filename, __dirname)
-    return mod.exports
+function jsoncParse(data: string) {
+  try {
+    return new Function(`return ${strip(data).trim()}`)()
+  }
+  catch {
+    // Silently ignore any error
+    // That's what tsc/jsonc-parser did after all
+    return {}
   }
 }
-export async function loadCjsCode(file: string, loader?: any) {
-  const str = await readFile(file, 'utf8')
-  const res = await transform(str, {
-    loader: loader || getLoaderMap(file),
-    format: 'cjs',
-  })
-  return requireCjsLoad(res.code)
-}
-const loaderMap = {
-  cjs: 'js',
-  mjs: 'js',
-  jsx: 'jsx',
-  ts: 'ts',
-  tsx: 'tsx',
-}
-function getLoaderMap(file: string): TransformOptions['loader'] {
-  const ext = extname(file).slice(1)
-  return loaderMap[ext] || 'js'
+
+const joycon = new JoyCon()
+
+async function loadJson(filepath: string) {
+  try {
+    return jsoncParse(await readFile(filepath, 'utf8'))
+  }
+  catch (error) {
+    if (error instanceof Error) {
+      throw new TypeError(
+        `Failed to parse ${relative(process.cwd(), filepath)}: ${
+          error.message
+        }`,
+      )
+    }
+    else {
+      throw error
+    }
+  }
 }
 
-// export async function loadEsmCode(file: string, loader?: any) {
-//   const str = await readFile(file, 'utf8')
-//   const res = await transform(str, {
-//     loader: loader || getLoaderMap(file),
-//     format: 'esm',
-//   })
-//   return requireEsmLoad(res.code)
-// }
+const jsonLoader = {
+  test: /\.json$/,
+  load(filepath: string) {
+    return loadJson(filepath)
+  },
+}
 
-// export async function requireEsmLoad(code: string) {
-//   let tempDir
-//   try {
-//     tempDir = await mkdtemp(process.env.TMPDIR || 'temp-')
-//     console.log(tempDir)
-//   }
-//   catch (err) {
-//     console.log(err)
-//   }
-//   const filePath = `${tempDir}/temp-file.txt`
-//   console.log(filePath)
-//   await writeFile(filePath, code, 'utf8')
-//   return async () => {
-//     try {
-//       const data = await import(filePath)
-//       return data
-//     }
-//     finally {
-//       unlink(filePath)
-//     }
-//   }
-// }
+joycon.addLoader(jsonLoader)
+export async function loadConfig<T = any>(
+  cli: string,
+  cwd = process.cwd(),
+): Promise<{ path?: string; data?: T }> {
+  const configJoycon = new JoyCon()
+  const configPath = await configJoycon.resolve(
+    [
+      `${cli}.config.ts`,
+      `${cli}.config.js`,
+      `${cli}.config.cjs`,
+      `${cli}.config.mjs`,
+      `${cli}.config.json`,
+    ],
+    cwd,
+    parse(cwd).root,
+  )
+
+  if (configPath) {
+    if (configPath.endsWith('.json')) {
+      let data = await loadJson(configPath)
+      if (configPath.endsWith('package.json')) {
+        data = data[cli]
+      }
+      if (data) {
+        return { path: configPath, data }
+      }
+      return {}
+    }
+
+    const config = await bundleRequire({
+      filepath: configPath,
+    })
+    return {
+      path: configPath,
+      data: config.mod[cli] || config.mod.default || config.mod,
+    }
+  }
+
+  return {}
+}

@@ -11,20 +11,22 @@
   "bugs": {
     "url": "https://github.com/hengshanMWC/load-code/issues"
   },
-  "module": "dist/index.js",
-  "main": "dist/index.js",
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
   "types": "dist/index.d.ts",
   "scripts": {
     "release": "esno ./scripts/release",
-    "build": "tsup",
+    "build": "tsup --format esm,cjs --target node14",
     "test": "vitest",
     "test:cov": "vitest --coverage",
     "lint": "eslint --ext=js,ts,json,md,tsx .",
     "lint:fix": "eslint --fix --ext=js,ts,json,md,tsx .",
     "prepare": "husky install"
-  },
-  "peerDependencies": {
-    "esbuild": "*"
   },
   "devDependencies": {
     "@antfu/eslint-config-ts": "^0.38.5",
@@ -35,7 +37,6 @@
     "@vitest/coverage-c8": "^0.31.0",
     "bumpp": "^9.1.0",
     "colors": "^1.4.0",
-    "esbuild": "^0.18.1",
     "eslint": "^8.41.0",
     "esno": "^0.16.3",
     "husky": "^7.0.4",
@@ -46,5 +47,10 @@
   },
   "lint-staged": {
     "{server,client}/*.{js,ts,json,md,tsx}": "pnpm lint"
+  },
+  "dependencies": {
+    "bundle-require": "^4.0.1",
+    "joycon": "^3.1.1",
+    "strip-json-comments": "^5.0.0"
   }
 }
