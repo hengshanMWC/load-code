@@ -1,33 +1,24 @@
 # introduce
-- [x] webpack5 :package:
-- [x] vitest :sheep:
-- [x] typescript :alien:
-- [x] eslint、husky :flashlight:
+读取文件配置
 
-# init
-
+# install
 ```
-git clone https://github.com/hengshanMWC/load-code.git
-cd load-code
-pnpm i
+npm i load-code
 ```
 
-# publish test
+# use
+读取文件优先级test.config.ts->test.config.js->test.config.cjs->test.config.js->test.config.mjs->test.config.json->package.json的test字段
+```ts
+import { loadConfig } from 'load-code'
 
-next, simulate the publish process
-
-## build local NPM source
-
+// 传配置名，基于配置名，读取配置
+const configData = await loadConfig('test')
 ```
-npm install -g verdaccio
-verdaccio
+```ts
+function loadConfig<T = any>(cli: string, cwd?: string): Promise<{
+  path?: string // 配置文件路径
+  data?: T // 配置数据
+}>
 ```
 
-Of course, if you want to use it formally, please modify it `.npmrc`
 
-If you want some of the packages to specify NPM source, you can modify the package Publishconfig. JSON registry
-
-## release
-```
-npm run release
-```

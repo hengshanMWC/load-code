@@ -1,63 +1,80 @@
-import { mkdtemp, readFile, unlink, writeFile } from 'node:fs/promises'
-import { extname } from 'node:path'
-import type { TransformOptions } from 'esbuild'
-import { transform } from 'esbuild'
+import { basename, join, parse, relative } from 'node:path'
+import { readFile } from 'node:fs/promises'
+import JoyCon from 'joycon'
+import { bundleRequire } from 'bundle-require'
+import { JS_EXT_RE, getRandomId, jsoncParse, similarDirectory } from './utils'
 
-export function requireCjsLoad(code: string) {
-  const fn = new Function('require', 'exports', 'module', code)
-  const mod = { exports: {} }
-  const moduleContext = { exports: mod.exports, module: mod }
-  fn(require, mod.exports, moduleContext.module)
-  return mod.exports
-}
-export async function loadCjsCode(file: string, loader?: any) {
-  const str = await readFile(file, 'utf8')
-  const res = await transform(str, {
-    loader: loader || getLoaderMap(file),
-    format: 'cjs',
-  })
-  return requireCjsLoad(res.code)
-}
-const loaderMap = {
-  cjs: 'js',
-  mjs: 'js',
-  jsx: 'jsx',
-  ts: 'ts',
-  tsx: 'tsx',
-}
-function getLoaderMap(file: string): TransformOptions['loader'] {
-  const ext = extname(file).slice(1)
-  return loaderMap[ext] || 'js'
-}
+const joycon = new JoyCon()
 
-export async function loadEsmCode(file: string, loader?: any) {
-  const str = await readFile(file, 'utf8')
-  const res = await transform(str, {
-    loader: loader || getLoaderMap(file),
-    format: 'esm',
-  })
-  return requireEsmLoad(res.code)
-}
-
-export async function requireEsmLoad(code: string) {
-  let tempDir
+async function loadJson(filepath: string) {
   try {
-    tempDir = await mkdtemp(process.env.TMPDIR || 'temp-')
-    console.log(tempDir)
+    return jsoncParse(await readFile(filepath, 'utf8'))
   }
-  catch (err) {
-    console.log(err)
-  }
-  const filePath = `${tempDir}/temp-file.txt`
-  console.log(filePath)
-  await writeFile(filePath, code, 'utf8')
-  return async () => {
-    try {
-      const data = await import(filePath)
-      return data
+  catch (error) {
+    if (error instanceof Error) {
+      throw new TypeError(
+        `Failed to parse ${relative(process.cwd(), filepath)}: ${
+          error.message
+        }`,
+      )
     }
-    finally {
-      unlink(filePath)
+    else {
+      throw error
     }
   }
+}
+
+const jsonLoader = {
+  test: /\.json$/,
+  load(filepath: string) {
+    return loadJson(filepath)
+  },
+}
+
+joycon.addLoader(jsonLoader)
+export async function loadConfig<T = any>(
+  cli: string,
+  cwd = process.cwd(),
+): Promise<{ path?: string; data?: T }> {
+  const configJoycon = new JoyCon()
+  const configPath = await configJoycon.resolve(
+    [
+      `${cli}.config.ts`,
+      `${cli}.config.js`,
+      `${cli}.config.cjs`,
+      `${cli}.config.mjs`,
+      `${cli}.config.json`,
+    ],
+    cwd,
+    parse(cwd).root,
+  )
+
+  if (configPath) {
+    if (configPath.endsWith('.json')) {
+      let data = await loadJson(configPath)
+      if (configPath.endsWith('package.json')) {
+        data = data[cli]
+      }
+      if (data) {
+        return { path: configPath, data }
+      }
+      return {}
+    }
+    const similarDirectoryPath = await similarDirectory()
+
+    const config = await bundleRequire({
+      filepath: configPath,
+      getOutputFile(filepath, format) {
+        return join(similarDirectoryPath, basename(filepath)).replace(
+          JS_EXT_RE,
+          `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`)
+      },
+    })
+    return {
+      path: configPath,
+      data: config.mod[cli] || config.mod.default || config.mod,
+    }
+  }
+
+  return {}
 }
