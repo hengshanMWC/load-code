@@ -32,6 +32,20 @@ const jsonLoader = {
 }
 
 joycon.addLoader(jsonLoader)
+
+async function buildFile (configPath: string) {
+  const similarDirectoryPath = await similarDirectory()
+  const config = await bundleRequire({
+    filepath: configPath,
+    getOutputFile(filepath, format) {
+      return join(similarDirectoryPath, basename(filepath)).replace(
+        JS_EXT_RE,
+        `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`)
+    },
+  })
+  return config
+}
+
 export async function loadConfig<T = any>(
   cli: string,
   cwd = process.cwd(),
@@ -60,19 +74,39 @@ export async function loadConfig<T = any>(
       }
       return {}
     }
-    const similarDirectoryPath = await similarDirectory()
+    const config = await buildFile(configPath)
 
-    const config = await bundleRequire({
-      filepath: configPath,
-      getOutputFile(filepath, format) {
-        return join(similarDirectoryPath, basename(filepath)).replace(
-          JS_EXT_RE,
-          `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`)
-      },
-    })
     return {
       path: configPath,
       data: config.mod[cli] || config.mod.default || config.mod,
+    }
+  }
+
+  return {}
+}
+
+export async function loadFileCode<T = any>(
+  filePath: string,
+): Promise<{ path?: string; data?: T }> {
+  const configJoycon = new JoyCon()
+  const configPath = await configJoycon.resolve(
+    [filePath]
+  )
+
+  if (configPath) {
+    if (configPath.endsWith('.json')) {
+      let data = await loadJson(configPath)
+      if (data) {
+        return { path: configPath, data }
+      }
+      return {}
+    }
+
+    const config = await buildFile(configPath)
+
+    return {
+      path: configPath,
+      data: config.mod.default || config.mod,
     }
   }
 
