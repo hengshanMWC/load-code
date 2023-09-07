@@ -33,7 +33,6 @@
     "@types/node": "^18.11.18",
     "@typescript-eslint/parser": "^5.59.7",
     "@vitest/coverage-c8": "^0.31.0",
-    "bumpp": "^9.1.0",
     "colors": "^1.4.0",
     "esbuild": "^0.18.1",
     "eslint": "^8.41.0",
@@ -46,5 +45,8 @@
   },
   "lint-staged": {
     "{server,client}/*.{js,ts,json,md,tsx}": "pnpm lint"
+  },
+  "dependencies": {
+    "@abmao/pkgs": "2.1.8-beta.2"
   }
 }
