@@ -1,8 +1,8 @@
-import { basename, join, parse, relative } from 'node:path'
+import { parse, relative } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import JoyCon from 'joycon'
 import { bundleRequire } from 'bundle-require'
-import { JS_EXT_RE, getRandomId, jsoncParse, similarDirectory } from './utils'
+import { jsoncParse } from './utils'
 
 const joycon = new JoyCon()
 
@@ -33,15 +33,9 @@ const jsonLoader = {
 
 joycon.addLoader(jsonLoader)
 
-async function buildFile (configPath: string) {
-  const similarDirectoryPath = await similarDirectory()
+async function buildFile(configPath: string) {
   const config = await bundleRequire({
     filepath: configPath,
-    getOutputFile(filepath, format) {
-      return join(similarDirectoryPath, basename(filepath)).replace(
-        JS_EXT_RE,
-        `.bundled_${getRandomId()}.${format === 'esm' ? 'mjs' : 'cjs'}`)
-    },
   })
   return config
 }
@@ -90,12 +84,12 @@ export async function loadFileCode<T = any>(
 ): Promise<{ path?: string; data?: T }> {
   const configJoycon = new JoyCon()
   const configPath = await configJoycon.resolve(
-    [filePath]
+    [filePath],
   )
 
   if (configPath) {
     if (configPath.endsWith('.json')) {
-      let data = await loadJson(configPath)
+      const data = await loadJson(configPath)
       if (data) {
         return { path: configPath, data }
       }
