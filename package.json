@@ -19,7 +19,13 @@
     }
   },
   "types": "dist/index.d.ts",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
   "scripts": {
+    "commit": "cz",
     "release": "esno ./scripts/release",
     "build": "tsup --format esm,cjs --target node14",
     "test": "vitest",
@@ -37,6 +43,8 @@
     "@typescript-eslint/parser": "^5.59.7",
     "@vitest/coverage-c8": "^0.31.0",
     "colors": "^1.4.0",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.41.0",
     "esno": "^0.16.3",
     "husky": "^7.0.4",
